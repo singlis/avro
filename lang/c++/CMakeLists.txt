@@ -57,9 +57,13 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     set_source_files_properties(impl/avrogencpp.cc PROPERTIES COMPILE_FLAGS "-U_GLIBCXX_DEBUG")
 endif ()
 
+set(BOOST_INCLUDEDIR "packages/boost.1.64.0.0/lib/native/include")
+set(BOOST_LIBRARYDIR "packages/boost.1.64.0.0/lib/native/address-model-64")
+
+message("BOOST_LIBRARYDIR ${BOOST_LIBRARYDIR}")
 
 find_package (Boost 1.38 REQUIRED
-    COMPONENTS filesystem system program_options iostreams)
+    COMPONENTS filesystem system program_options iostreams zlib bzip2)
 
 add_definitions (${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
 
@@ -166,7 +170,55 @@ install (TARGETS avrocpp avrocpp_s
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION lib)
 
+
 install (TARGETS avrogencpp RUNTIME DESTINATION bin)
+install (FILES ${Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG}
+         DESTINATION bin
+         CONFIGURATIONS Debug)
+
+macro (copylibrary config library target)
+    get_filename_component(library_base_name ${library} NAME_WE)
+    get_filename_component(library_path ${library} PATH)
+    set(shared_library_file "${library_path}/${library_base_name}.dll")
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND if 1==${config} ${CMAKE_COMMAND} -E copy
+        ${shared_library_file}
+        $<TARGET_FILE_DIR:${target}>)
+endmacro (copylibrary)
+
+
+macro (copy_boost_library dbg_library library target)
+    set(DebugConfig $<CONFIG:Debug>)
+    set(ReleaseConfig $<CONFIG:Release>)
+    
+    copylibrary (${DebugConfig} ${dbg_library} ${target})
+    copylibrary (${ReleaseConfig} ${library} ${target})
+
+    #copylibrary (${DebugConfig} ${Boost_IOSTREAMS_LIBRARY_DEBUG} ${target})
+    #copylibrary (${DebugConfig} ${Boost_FILESYSTEM_LIBRARY_DEBUG} ${target})
+    #copylibrary (${DebugConfig} ${Boost_SYSTEM_LIBRARY_DEBUG} ${target})
+    #copylibrary (${DebugConfig} ${Boost_ZLIB_LIBRARY_DEBUG} ${target})
+    #copylibrary (${DebugConfig} ${Boost_BZIP2_LIBRARY_DEBUG} ${target})
+
+    #copylibrary (${ReleaseConfig} ${Boost_IOSTREAMS_LIBRARY_DEBUG} ${target})
+    #copylibrary (${ReleaseConfig} ${Boost_FILESYSTEM_LIBRARY_DEBUG} ${target})
+    #copylibrary (${ReleaseConfig} ${Boost_SYSTEM_LIBRARY_DEBUG} ${target})
+    #copylibrary (${ReleaseConfig} ${Boost_ZLIB_LIBRARY_DEBUG} ${target})
+    #copylibrary (${ReleaseConfig} ${Boost_BZIP2_LIBRARY_DEBUG} ${target})
+
+endmacro (copy_boost_library)
+
+# Copy the dependencies for avrogen
+copy_boost_library (${Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG} ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE} avrogencpp)
+
+# Copy the dependencies for the test
+copy_boost_library (${Boost_ZLIB_LIBRARY_DEBUG} ${Boost_ZLIB_LIBRARY_RELEASE} CodecTests)
+copy_boost_library (${Boost_BZIP2_LIBRARY_DEBUG} ${Boost_BZIP2_LIBRARY_RELEASE} CodecTests)
+copy_boost_library (${Boost_IOSTREAMS_LIBRARY_DEBUG} ${Boost_IOSTREAMS_LIBRARY_RELEASE} JsonTests)
+copy_boost_library (${Boost_SYSTEM_LIBRARY_DEBUG} ${Boost_SYSTEM_LIBRARY_RELEASE} DataFileTests)
+copy_boost_library (${Boost_FILESYSTEM_LIBRARY_DEBUG} ${Boost_FILESYSTEM_LIBRARY_RELEASE} DataFileTests)
+
+
 
 install (DIRECTORY api/ DESTINATION include/avro
     FILES_MATCHING PATTERN *.hh)

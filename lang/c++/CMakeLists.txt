@@ -194,18 +194,6 @@ macro (copy_boost_library dbg_library library target)
     copylibrary (${DebugConfig} ${dbg_library} ${target})
     copylibrary (${ReleaseConfig} ${library} ${target})
 
-    #copylibrary (${DebugConfig} ${Boost_IOSTREAMS_LIBRARY_DEBUG} ${target})
-    #copylibrary (${DebugConfig} ${Boost_FILESYSTEM_LIBRARY_DEBUG} ${target})
-    #copylibrary (${DebugConfig} ${Boost_SYSTEM_LIBRARY_DEBUG} ${target})
-    #copylibrary (${DebugConfig} ${Boost_ZLIB_LIBRARY_DEBUG} ${target})
-    #copylibrary (${DebugConfig} ${Boost_BZIP2_LIBRARY_DEBUG} ${target})
-
-    #copylibrary (${ReleaseConfig} ${Boost_IOSTREAMS_LIBRARY_DEBUG} ${target})
-    #copylibrary (${ReleaseConfig} ${Boost_FILESYSTEM_LIBRARY_DEBUG} ${target})
-    #copylibrary (${ReleaseConfig} ${Boost_SYSTEM_LIBRARY_DEBUG} ${target})
-    #copylibrary (${ReleaseConfig} ${Boost_ZLIB_LIBRARY_DEBUG} ${target})
-    #copylibrary (${ReleaseConfig} ${Boost_BZIP2_LIBRARY_DEBUG} ${target})
-
 endmacro (copy_boost_library)
 
 # Copy the dependencies for avrogen
